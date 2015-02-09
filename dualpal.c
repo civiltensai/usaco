@@ -10,7 +10,7 @@ TASK: dualpal
 //#define _DEBUG_
 #ifdef _DEBUG_
 	FILE *fdebug;
-	#define debug(str, ...) do{ fprintf(fdebug, str, __VA_ARGS__); printf(str, __VA_ARGS__); }while(0)
+	#define debug(str, ...) do{ fprintf(fdebug, str, __VA_ARGS__); fflush(fdebug); printf(str, __VA_ARGS__); }while(0)
 #else
 	#define debug(str, ...) {;}
 #endif
@@ -19,6 +19,7 @@ TASK: dualpal
 #define MAXLEN 32
 
 int numbaseB[32] = {0};
+int result[10000] = {0};
 
 int transBase(int number, int base, int* intArray){
 	int index;
@@ -61,22 +62,33 @@ int main(void){
 #endif
     
     int numN, numS, base, number;
-    int i = 0;
+    int i = 0, j = 0;
     fscanf(fin, "%d %d\n", &numN, &numS);
     debug("%d %d\n", numN, numS);
     numS++;
-    while(i<3){
-    	for(base = 2; base <= 10; base++){
+    while(i < numN){
+    	j = 0;
+    	for(base = 2; (base <= 10) && (j < 2); base++){
     		int len = transBase(numS, base, numbaseB);
     		if(checkPalindrome(numbaseB, len)){
+#ifdef _DEBUG_
     			printintArray(numbaseB, len);
-    			i++;
-    			fprintf(fout, "%d\n", numS);
+#endif
+    			j++;
+    			//fprintf(fout, "%d\n", numS);
 			}
+		}
+		if(j == 2){
+			result[i] = numS;
+			debug("result[%d]=%d ", i, result[i]);
+			i++;
 		}
 		numS++;
 	}
 	
+	for(j = 0; j < i; j++){
+		fprintf(fout, "%d\n", result[j]);
+	}
     
     fclose(fin);
     fclose(fout);
