@@ -62,13 +62,13 @@ int main(void){
 		debug("diff%s", "\n");
 		for(i = 0; i < occupiedCount; i++){
 			if(i > 0){
-				diff[i] = stallNum[i] - stallNum[i-1];
-				minLength += diff[i];
-				debug("%d ", diff[i]);
+				diff[i-1] = stallNum[i] - stallNum[i-1];
+				minLength += diff[i-1];
+				debug("%d ", diff[i-1]);
 			}
 		}
 		debug("%s", "\n");
-		qsort(diff, 200 , sizeof(diff[0]), maxfirstcmp);
+		qsort(diff, occupiedCount - 1 , sizeof(diff[0]), maxfirstcmp);
 		debug("diff%s", "\n");
 		for(i = 0; i < occupiedCount - 1; i++){
 			debug("%d ", diff[i]);
