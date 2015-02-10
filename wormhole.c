@@ -7,7 +7,7 @@ TASK: wormhole
 #include <stdlib.h>
 #include <string.h>
 
-#define _DEBUG_
+//#define _DEBUG_
 #ifdef _DEBUG_
 	FILE *fdebug;
 	#define debug(str, ...) do{ fprintf(fdebug, str, __VA_ARGS__); printf(str, __VA_ARGS__); }while(0)
@@ -26,19 +26,8 @@ typedef struct _pos{
 }POS;
 POS pos[12];
 
-typedef struct _perm{
-	int perm[12];
-	struct _perm* next;
-}PERM;
-
-PERM* start;
-PERM* last;
 int count = 0;
-
-typedef struct _queue{
-	int next;
-	
-};
+int all = 0;
 
 int isInfinit(int number){
 	int i;
@@ -57,17 +46,27 @@ int isInfinit(int number){
 	return 0;
 }
 
+#ifdef _DEBUG_
+void dump(int n){
+	int i;
+	for(i = 0; i < n; i++){
+		debug("(%d,%d) next=%d pre=%d nextXIndex=%d warmholeIndex=%d\n", pos[i].x, pos[i].y, pos[i].next, pos[i].pre, pos[i].nextXIndex, pos[i].warmholeIndex);
+	}
+	debug("%s","\n");
+}
+#else
+#define dump(x) {;}
+#endif
+
 void checkAllPerm(int posIndex, int n){
 	int i;
 	debug("checkAllPerm %d\n", posIndex);
 	if(posIndex == -1){
-		for(i = 0; i < n; i++){
-			debug("(%d,%d) next=%d pre=%d nextXIndex=%d warmholeIndex=%d\n", pos[i].x, pos[i].y, pos[i].next, pos[i].pre, pos[i].nextXIndex, pos[i].warmholeIndex);
-		}
 		if(isInfinit(n)){
-			debug("%s","\n");
+			dump(n);
 			count++;
 		}
+		all++;
 	}
 	else{
 		for(i = pos[posIndex].next; i < n && i != -1; i=pos[i].next){
@@ -87,7 +86,6 @@ void checkAllPerm(int posIndex, int n){
 				
 				pos[posIndex].warmholeIndex = -1;
 				pos[i].warmholeIndex = -1;
-				pos[posIndex].next = -1;
 			}
 		}
 	}
@@ -115,8 +113,6 @@ int main(void){
 
 	
 	int i, number;
-	start = (PERM*) malloc(sizeof(PERM));
-	last = start;
 	
 	fscanf(fin, "%d\n", &number);
 	debug("%d\n", number);
@@ -149,7 +145,7 @@ int main(void){
 	
 	checkAllPerm(0, number);
 	fprintf(fout, "%d\n", count);
-	debug("%d\n", count);
+	debug("%d %d\n", count, all);
 	
     fclose(fin);
     fclose(fout);
