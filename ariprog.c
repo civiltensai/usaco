@@ -8,7 +8,7 @@ TASK: ariprog
 #include <string.h>
 #include <limits.h>
 
-#define _DEBUG_
+//#define _DEBUG_
 #ifdef _DEBUG_
 	FILE *fdebug;
 	#define debug(str, ...) do{ fprintf(fdebug, str, __VA_ARGS__); printf(str, __VA_ARGS__); }while(0)
@@ -19,7 +19,9 @@ TASK: ariprog
 int sequence[25] = {0};
 int sCount = 0;
 int bisquares[62500] = {0};
+int bisquaresDiff[62500] = {0};
 int bCount = 0;
+int bisquaresEntry[125000] = {0};
 
 int cmp(const void* a, const void* b){
 	return (*(int*)a - *(int*)b);
@@ -41,40 +43,32 @@ void dump(){
 int hasArithmeticProgression(int diff, int n, FILE* fout){
 	int i, j;
 	int ret = 0;
-	//int maxA = bisquares[bCount - 1] - diff*n;
 	debug("diff=%d bCount=%d\n", diff, bCount);
-	for(i = 0; i <= bCount; i++){
-		debug("start from bisquares[%d]=%d ---- \n", i, bisquares[i]);
-		sCount = 0;
-		sequence[sCount] = bisquares[i];
-		debug("sequence[%d]=%d->", sCount, sequence[sCount]);
-		sCount++;
-		for(j = 1; j < n; j++){
-			int nextValue = bisquares[i]+diff*j;
-			int* nextPtr = bsearch(&nextValue, bisquares, bCount, sizeof(int), cmp);
-			if(!nextPtr){
-				debug("%s\n", "X");
-				break;
+	for(i = bisquares[0]; i < diff; i++){
+		debug("start from i=%d ---- ", i);
+		int length = 0;
+		//probe all to find all exist sequence with diff.
+		for(j = i; j <= bisquares[bCount-1]; j = j+diff){
+			if(bisquaresEntry[j]){
+				debug("%d,", j);
+				length++;
+				if(length >= n){
+					int start = j - diff*(n-1);
+					fprintf(fout, "%d %d\n", start, diff);
+					debug("%d %d\n", start, diff);
+					ret = 1;
+				}
 			}
-			else{
-				sequence[sCount] = *nextPtr;
-				debug("sequence[%d]=%d->", sCount, sequence[sCount]);
-				sCount++;
+			else if(length){
+				debug("(%d) ", length);
+				length = 0;
 			}
 		}
-		if(sCount == n){
-			debug("\nsCount=%d j=%d: ", sCount, j);
-			fprintf(fout, "%d %d\n", sequence[0], diff);
-			int k;
-			for(k = 0; k < sCount; k++){
-				debug("%2d ", sequence[k]); 
-			}
-			debug("%s", "\n");
-			ret = 1;
-		}
+		debug("%s", "\n");
 	}
 	return ret;
 }
+
 
 int main(void){
     FILE *fin  = fopen("ariprog.in", "r");
@@ -93,33 +87,27 @@ int main(void){
 	int i, j;
 	for(i = 0; i <= numberM; i++){
 		for(j = 0; j <= numberM; j++){
-			
-			bisquares[bCount] = i*i+j*j;
-			bCount++;
+			int bisquare = i*i+j*j;
+			if(!bisquaresEntry[bisquare]){
+				bisquaresEntry[bisquare] = bCount;
+				bisquares[bCount] = bisquare;
+				bCount++;
+			}
 		}
 	}
 	
 	dump();
 	qsort(bisquares, bCount, sizeof(int), cmp);
 	
-	dump();
-	j = 0;
-	i = 1;
-	do{
-		if(bisquares[i]==bisquares[j]){
-			i++;
-		}
-		else{
-			bisquares[j+1] = bisquares[i];
-			i++;
-			j++;
-		}
-	}while(i < bCount);
-	bCount = j+1;
+	
+	for(i = 1; i < bCount; i++){
+		bisquaresDiff[i-1] = bisquares[i] - bisquares[i-1];
+	}
+	
 	dump();
 	
 	int count = 0;
-	for(i = 1; i < bisquares[bCount-1]; i++){
+	for(i = 1; i <= bisquares[bCount-1]/numberN; i++){
 		if(hasArithmeticProgression(i, numberN, fout))
 			count++;
 	}
