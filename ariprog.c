@@ -23,6 +23,9 @@ int bisquaresDiff[62500] = {0};
 int bCount = 0;
 int bisquaresEntry[125000] = {0};
 
+int result[62500] = {0};
+int resultCount = 0;
+
 int cmp(const void* a, const void* b){
 	return (*(int*)a - *(int*)b);
 }
@@ -50,17 +53,18 @@ int hasArithmeticProgression(int diff, int n, FILE* fout){
 		//probe all to find all exist sequence with diff.
 		for(j = i; j <= bisquares[bCount-1]; j = j+diff){
 			if(bisquaresEntry[j]){
-				debug("%d,", j);
 				length++;
+				debug("%d(%d),", j, length);
 				if(length >= n){
 					int start = j - diff*(n-1);
-					fprintf(fout, "%d %d\n", start, diff);
-					debug("%d %d\n", start, diff);
+					//fprintf(fout, "%d %d\n", start, diff);
+					//debug("%d %d\n", start, diff);
 					ret = 1;
+					result[resultCount] = start;
+					resultCount++;
 				}
 			}
 			else if(length){
-				debug("(%d) ", length);
 				length = 0;
 			}
 		}
@@ -89,7 +93,7 @@ int main(void){
 		for(j = 0; j <= numberM; j++){
 			int bisquare = i*i+j*j;
 			if(!bisquaresEntry[bisquare]){
-				bisquaresEntry[bisquare] = bCount;
+				bisquaresEntry[bisquare] = 1;
 				bisquares[bCount] = bisquare;
 				bCount++;
 			}
@@ -107,9 +111,16 @@ int main(void){
 	dump();
 	
 	int count = 0;
-	for(i = 1; i <= bisquares[bCount-1]/numberN; i++){
-		if(hasArithmeticProgression(i, numberN, fout))
+	for(i = 1; i <= bisquares[bCount-1]/(numberN-1); i++){
+		if(hasArithmeticProgression(i, numberN, fout)){
 			count++;
+			qsort(result, resultCount, sizeof(int), cmp);
+			for(j = 0; j < resultCount; j++){
+				fprintf(fout, "%d %d\n", result[j], i);
+				debug("%d %d\n", result[j], i);
+			}
+			resultCount = 0;
+		}
 	}
 	
 	if(!count) fprintf(fout, "NONE\n");

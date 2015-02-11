@@ -120,9 +120,16 @@ int main(void){
 	qsort(resultC, resultCount, sizeof(int), cmp);
 	
 	for(i = 0; i < resultCount; i++){
-		fprintf(fout, "%d ", resultC[i]);
-		debug("%d ", resultC[i]);
+		fprintf(fout, "%d", resultC[i]);
+		debug("%d", resultC[i]);
+		if(i<resultCount-1){
+			fprintf(fout, " ");
+			debug("%s", " ");
+		}
+		
 	}
+	fprintf(fout, "\n");
+	debug("%s", "\n");
 	
     fclose(fin);
     fclose(fout);
