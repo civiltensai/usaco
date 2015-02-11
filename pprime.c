@@ -18,6 +18,7 @@ TASK: pprime
 #define MAXDIGITS 8
 #define MAXNUMBER 1000000
 int prime[MAXNUMBER] = {0};
+int primeSquare[MAXNUMBER] = {0};
 int primeCount = 0;
 int primeAfterAIndex = 0;
 
@@ -26,7 +27,7 @@ int isPrime(int p){
 	if( !(p%2) && !(p%3) ){
 		return 0;
 	}
-	for(i = 0; i < primeCount && (prime[i]*prime[i]<=p) ; i++){
+	for(i = 0; i < primeCount && (primeSquare[i]<=p) ; i++){
 		if( !(p%prime[i]) ){
 			return 0;
 		}
@@ -66,29 +67,27 @@ int main(void){
 	prime[1] = 3;
 	primeCount = 2;
 	int i;
-	for(i = 5; i <= numB; i += 2){
+	for(i = 5; i <= numA; i += 2){
 		if(isPrime(i)){
-			if(!primeAfterAIndex && (i >= numA)){
-				primeAfterAIndex = primeCount;
-				debug("primeAfterAIndex=%d prime=%d\n", primeAfterAIndex, i);
-			}
 			prime[primeCount] = i;
+			primeSquare[primeCount] = i*i;
 			primeCount++;
 		}
 	}
-	debug("%s","\n");
-	for(i = 0; i < primeCount; i++){
-		debug("%d ", prime[i]);
-	}
-	
-	for(i = primeAfterAIndex; i < primeCount; i++){
-		if(isPalindrome(prime[i])){
-			//print out
-			fprintf(fout, "%d\n", prime[i]);
-			debug("%d\n", prime[i]);
+	for(i = ((numA)/2)*2 + 1 ; i <= numB; i += 2){
+		if(isPrime(i)){
+			prime[primeCount] = i;
+			primeSquare[primeCount] = i*i;
+			primeCount++;
+			if((i >= numA)){
+				if(isPalindrome(i)){
+					//print out
+					fprintf(fout, "%d\n", i);
+					debug("%d\n", i);
+				}
+			}
 		}
 	}
-	
     fclose(fin);
     fclose(fout);
 #ifdef _DEBUG_
