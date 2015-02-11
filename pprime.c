@@ -16,14 +16,14 @@ TASK: pprime
 #endif
 
 #define MAXDIGITS 8
-#define MAXNUMBER 100000000
+#define MAXNUMBER 1000000
 int prime[MAXNUMBER] = {0};
 int primeCount = 0;
 int primeAfterAIndex = 0;
 
 int isPrime(int p){
 	int i;
-	if( !(p%2) ){
+	if( !(p%2) && !(p%3) ){
 		return 0;
 	}
 	for(i = 0; i < primeCount && (prime[i]*prime[i]<=p) ; i++){
@@ -63,9 +63,10 @@ int main(void){
 	debug("%d %d\n", numA, numB);
 	
 	prime[0] = 2;
-	primeCount = 1;
+	prime[1] = 3;
+	primeCount = 2;
 	int i;
-	for(i = 3; i <= numB; i += 2){
+	for(i = 5; i <= numB; i += 2){
 		if(isPrime(i)){
 			if(!primeAfterAIndex && (i >= numA)){
 				primeAfterAIndex = primeCount;
