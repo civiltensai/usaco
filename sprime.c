@@ -7,7 +7,7 @@ TASK: sprime
 #include <stdlib.h>
 #include <string.h>
 
-#define _DEBUG_
+//#define _DEBUG_
 #ifdef _DEBUG_
 	FILE *fdebug;
 	#define debug(str, ...) do{ fprintf(fdebug, str, __VA_ARGS__); printf(str, __VA_ARGS__); }while(0)
@@ -16,13 +16,11 @@ TASK: sprime
 #endif
 
 #define MAXDIGITS 8
-#define MAXNUMBER 10000000
-int sprime[MAXNUMBER] = {0};
+#define MAXNUMBER 1000000
+int sprime[10000] = {0};
 int sprimeIndex = 0;
 int prime[MAXNUMBER] = {0};
 int primeSquare[MAXNUMBER] = {0};
-int primeDigitsIndex[MAXDIGITS+1] = {0};
-int digits = 0;
 int sPrimeDigitsIndex[MAXDIGITS+1] = {0};
 int sdigits = 0;
 int primeCount = 0;
@@ -62,39 +60,35 @@ int isSuperPrime(int p){
 	return 0;
 }
 
-void findNDigitsSprime(int n, int* startIndex, int* endIndex){
+void findNDigitsSprime(int n, int* startIndex){
 	debug("n=%d ", n);
-	if(n <= sdigits){
+	if(n < sdigits+1){
 		*startIndex = sPrimeDigitsIndex[n-1]; 
-		*endIndex = sPrimeDigitsIndex[n];
-		debug("start=%d end=%d\n", *startIndex, *endIndex);
+		debug("start=%d\n", *startIndex);
 	}
 	else{
-		int startN_1, endN_1;
+		int startN_1;
 		int i, j;
 		
-		findNDigitsSprime(n-1, &startN_1, &endN_1);
-		debug("n(%d)-1 %d %d\n", n, startN_1, endN_1);
-		for(i = startN_1; i <= endN_1; i++){
+		findNDigitsSprime(n-1, &startN_1);
+		sPrimeDigitsIndex[n-1] = sprimeIndex;
+		debug("n(%d)-1 startN_1=%d sprimeIndex=%d highdigit[n-1]=%d\n", n, startN_1, sprimeIndex, highdigit[n-1] );
+		for(i = startN_1; sprime[i] < highdigit[n-1] && i < sprimeIndex; i++){
+			//debug("sprime[%d]=%d\n", i, sprime[i]);
 			for(j = 1; j < 10; j+=2){ //append 1,3,5,7,9
 				int sp = sprime[i]*10 + j;
+				//debug("i=%d sp=%d\n", i, sp);
 				if(isPrime(sp)){
 					sprime[sprimeIndex] = sp;
-					if(sp > highdigit[sdigits]){
-						sPrimeDigitsIndex[sdigits] = sprimeIndex;
-						sdigits++;
-					}
-					else{
-						sPrimeDigitsIndex[sdigits] = sprimeIndex+1;
-					}
-					debug("sp=%d sprimeIndex=%d sdigits=%d\n", sp, sprimeIndex, sdigits);
+					debug("sp=%d sprimeIndex=%d\n", sp, sprimeIndex);
 					sprimeIndex++;
 				}
 			}
 		}
-		*startIndex = endN_1+1;
-		*endIndex = sprimeIndex-1;
-		debug("start=%d end=%d\n", *startIndex, *endIndex);
+		sdigits++;
+		sPrimeDigitsIndex[n] = sprimeIndex;
+		*startIndex = sPrimeDigitsIndex[n-1];
+		debug("start=%d sprimeIndex=%d sdigits=%d\n", *startIndex, sprimeIndex, sdigits);
 	}
 }
 
@@ -112,13 +106,10 @@ int main(void){
 	
 	prime[0] = 2;
 	primeCount = 1;
-	primeDigitsIndex[digits] = 0;
 	sprime[0] = 2;
 	sprimeIndex++;
-	digits++;
-	sPrimeDigitsIndex[sdigits] = -1;
-	sPrimeDigitsIndex[sdigits+1] = 0;
-	sdigits++;
+	sPrimeDigitsIndex[0] = 0; //index=0: 1 digit, index=1: 2 digits, ...
+	sdigits = 1;              //sdigits=0: 1 digit, sdigits=1: 2 digits, ...
 	
 	int i, j, k, l;
 	int startIndex = 0;
@@ -129,41 +120,31 @@ int main(void){
 		if(isPrime(i)){
 			prime[primeCount] = i;
 			primeSquare[primeCount] = i*i;
-			if(i > highdigit[digits]){
-				primeDigitsIndex[digits] = primeCount;
-				digits++;
-			}
 			if(isSuperPrime(i)){
 				sprime[sprimeIndex] = i;
 				debug("%s[%d] ", "superprime:", sprimeIndex);
-				if(i > highdigit[sdigits]){
+				if(i >= highdigit[sdigits]){
 					sPrimeDigitsIndex[sdigits] = sprimeIndex;
-					debug("-sdigits=%d sprimeIndex=%d(%d)-", sdigits, sPrimeDigitsIndex[sdigits], sPrimeDigitsIndex[sdigits+1]);
 					sdigits++;
-				}
-				else{
-					sPrimeDigitsIndex[sdigits] = sprimeIndex+1;
 				}
 				sprimeIndex++;
 			}
-			debug("%d %d %d sdigits=%d %d(%d) %d\n", prime[primeCount], primeSquare[primeCount], digits, sdigits, sPrimeDigitsIndex[sdigits-1], sPrimeDigitsIndex[sdigits], sprime[sPrimeDigitsIndex[sdigits-1]]);
 			primeCount++;
 		}
 		i += 2;
-	}while(primeSquare[primeCount-1] < highdigit[numN]);
+	}while(primeSquare[primeCount-1] < highdigit[numN] || prime[primeCount-1] < highdigit[numN/2 + 1]);
 	
-	debug("%s", "---------");
-	for(i = 0; i < sdigits+1; i++){
-		debug("%dsprime[%d]=%d ", i, sPrimeDigitsIndex[i], sprime[sPrimeDigitsIndex[i]]);
+	debug("%s\n", "sprime---------");
+	for(i = 0; i < sprimeIndex; i++){
+		debug("sprime[%d]=%d ", i, sprime[i]);
 	}
-	debug("%s", "\n");
-	
+	debug("sprimeIndex=%d---------\n", sprimeIndex);
 	
 	int start, end;
-	findNDigitsSprime(numN, &start, &end);
-	debug("start=%d end=%d\n", start, end);
+	findNDigitsSprime(numN, &start);
+	debug("start=%d\n", start);
 	
-	for(i = start; i <= end; i++){
+	for(i = start; sprime[i] < highdigit[numN] && i < sprimeIndex; i++){
 		fprintf(fout, "%d\n", sprime[i]);
 		debug("%d\n", sprime[i]);
 	}
