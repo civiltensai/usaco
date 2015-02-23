@@ -34,11 +34,10 @@ NODE castle[MAX][MAX];
 
 typedef struct _component{
 	int count;
-	int x[MAX*MAX];
-	int y[MAX*MAX];
 }COM;
 
 COM areas[MAX*MAX];
+int componentCount = 0;
 
 int cmp(const void* a, const void* b){
 	COM* comAPtr = (COM*)a;
@@ -46,31 +45,31 @@ int cmp(const void* a, const void* b){
 	return comBPtr->count - comAPtr->count;
 }
 
-void createArea(int x, int y, int* count){
+void createArea(int x, int y){
 	castle[x][y].visited = 1;
 	//areas[castle[x][y].component].x[*count] = x;
 	//areas[castle[x][y].component].y[*count] = y;
-	*count = *count+1;
-	debug("(%d, %d)(%d)%d->", x, y, *count, castle[x][y].wall);
+	areas[componentCount].count++;
+	debug("(%d, %d)(%d)%d->", x, y, areas[componentCount].count, castle[x][y].wall);
 	if(WESTPATH(castle[x][y].wall) && castle[x-1][y].visited == 0){
 		debug("%s", "W->");
 		castle[x-1][y].component = castle[x][y].component;
-		createArea(x-1, y, count);
+		createArea(x-1, y);
 	}
 	if(NORTHPATH(castle[x][y].wall) && castle[x][y-1].visited == 0){
 		debug("%s", "N->");
 		castle[x][y-1].component = castle[x][y].component;
-		createArea(x, y-1, count);
+		createArea(x, y-1);
 	}
 	if(EASTPATH(castle[x][y].wall) && castle[x+1][y].visited == 0){
 		debug("%s", "E->");
 		castle[x+1][y].component = castle[x][y].component;
-		createArea(x+1, y, count);
+		createArea(x+1, y);
 	}
 	if(SOUTHPATH(castle[x][y].wall) && castle[x][y+1].visited == 0){
 		debug("%s", "S->");
 		castle[x][y+1].component = castle[x][y].component;
-		createArea(x, y+1, count);
+		createArea(x, y+1);
 	}
 }
 
@@ -98,79 +97,76 @@ int main(void){
 		}
 		debug("%s", "\n");
 	}
+	debug("%s", "\n");
+	debug("%s", "\n");
+	
+	debug("%s", "  ");
+	for(i = 0; i < numM; i++){
+		debug("%2d", i+1);
+	}
+	debug("%s", "\n");
+	for(j = 0; j < numN*2; j++){
+		if(!(j%2)){
+			debug("%2d ", j/2+1);
+		}
+		else{
+			debug("%s", "   ");
+		}
+		for(i = 0; i < numM; i++){
+			int x = i, y = j/2;
+			if(!(j%2)){
+				debug("%s","o");
+				if(EASTPATH(castle[x][y].wall)){
+					debug("%s", "-");
+				}
+				else{
+					debug("%s", " ");
+				}
+			}
+			else{
+				if(SOUTHPATH(castle[x][y].wall)){
+					debug("%s", "| ");
+				}
+				else{
+					debug("%s", "  ");
+				}
+			}
+		}
+		debug("%s", "\n");
+	}
 
-	int componentCount = 0;
+	int maxRoom = 0;
 	for(j = 0; j < numN; j++){
 		for(i = 0; i < numM; i++){
 			if(castle[i][j].visited == 0){
 				castle[i][j].component = componentCount;
-				createArea(i, j, &(castle[i][j].count));
-				//createArea(i, j, &areas[componentCount].count);
+				createArea(i, j);
+				debug("Component %2d Count=%d\n", castle[i][j].component, areas[castle[i][j].component].count);
+				if(maxRoom < areas[castle[i][j].component].count){
+					maxRoom = areas[castle[i][j].component].count;
+				}
 				componentCount++;
 			}
 		}
 	}
 	debug("%s", "\n");
-
-	int maxRoom = 0;
-	for(j = 0; j < numN; j++){
-		for(i = 0; i < numM; i++){
-			//debug("%2d(%2d,%2d) ", castle[i][j].wall, castle[i][j].component, areas[castle[i][j].component].count);
-			debug("%2d(%2d,%2d) ", castle[i][j].wall, castle[i][j].component, castle[i][j].count);
-			if(maxRoom < castle[i][j].count){
-				maxRoom = castle[i][j].count;
-			}
-		}
-		debug("%s", "\n");
-	}
-	
-	/*
-	for(i = 0; i < componentCount; i++){
-		debug("%2d - Rooms=%d: ", i, areas[i].count);
-		for(j = 0; j < areas[i].count; j++){
-			debug("(%d, %d) ", areas[i].x[j], areas[i].y[j]);
-		}
-		debug("%s","\n");
-	}
-	*/
 	
 	//print out
 	//The number of rooms the castle has.
 	fprintf(fout, "%d\n", componentCount);
-	debug("Rooms(index) = %d\n", componentCount);
+	debug("Component Count = %d\n", componentCount);
 	//The size of the largest room
 	fprintf(fout, "%d\n", maxRoom);
-	debug("Rooms(index) = %d\n", maxRoom);
-	/*
-	fprintf(fout, "%d\n", areas[0].count);
-	debug("Rooms(index) = %d\n", areas[0].count);
-	*/
+	debug("Max Rooms = %d\n", maxRoom);
+	
 	//The size of the largest room creatable by removing one wall
 	//The single wall to remove to make the largest room possible
 	int x = -1, y = -1;
 	int wall = 'W';
 	int newMax = 0;
-	for(j = numN-1; j >= 0; j--){
-		for(i = 0; i < numM; i++){
+	for(i = 0; i < numM; i++){
+		for(j = numN-1; j >= 0; j--){
 			debug("(%d,%d)\n", i, j);
-			if( (j > 0) && !NORTHPATH(castle[i][j].wall) && castle[i][j].component != castle[i][j-1].component && newMax < castle[i][j].count + castle[i][j-1].count){
-				debug("%d (%d, %d)%d %d %c->", newMax, i, j, castle[i][j].count, castle[i][j-1].count, wall);
-				//debug("%d %d %d %c->", newMax, x, y, wall);
-				newMax = castle[i][j].count + castle[i][j-1].count;
-				x = i;
-				y = j;
-				wall = 'N';
-				debug("%d %d %d %c\n", newMax, i, j, wall);
-			}
-			if( (i < 6) && !EASTPATH(castle[i][j].wall) && castle[i][j].component != castle[i+1][j].component && newMax < castle[i][j].count + castle[i+1][j].count){
-				debug("%d (%d, %d)%d %d %c->", newMax, i, j, castle[i][j].count, castle[i+1][j].count, wall);
-				newMax = castle[i][j].count + castle[i+1][j].count;
-				x = i;
-				y = j;
-				wall = 'E';
-				debug("%d %d %d %c\n", newMax, i, j, wall);
-			}
-			/*
 			if( (j > 0) && !NORTHPATH(castle[i][j].wall) && castle[i][j].component != castle[i][j-1].component && newMax < areas[castle[i][j].component].count + areas[castle[i][j-1].component].count){
 				debug("%d (%d, %d)%d %d %c->", newMax, i, j, areas[castle[i][j].component].count, areas[castle[i][j-1].component].count, wall);
 				//debug("%d %d %d %c->", newMax, x, y, wall);
@@ -180,7 +176,8 @@ int main(void){
 				wall = 'N';
 				debug("%d %d %d %c\n", newMax, i, j, wall);
 			}
-			if( (i < 6) && !EASTPATH(castle[i][j].wall) && castle[i][j].component != castle[i+1][j].component && newMax < areas[castle[i][j].component].count + areas[castle[i+1][j].component].count){
+			// i < numM-1 to avoid last column 
+			if( (i < numM-1) && !EASTPATH(castle[i][j].wall) && castle[i][j].component != castle[i+1][j].component && newMax < areas[castle[i][j].component].count + areas[castle[i+1][j].component].count){
 				debug("%d (%d, %d)%d %d %c->", newMax, i, j, areas[castle[i][j].component].count, areas[castle[i+1][j].component].count, wall);
 				newMax = areas[castle[i][j].component].count + areas[castle[i+1][j].component].count;
 				x = i;
@@ -188,12 +185,11 @@ int main(void){
 				wall = 'E';
 				debug("%d %d %d %c\n", newMax, i, j, wall);
 			}
-			*/
 		}
 	}
 	fprintf(fout, "%d\n", newMax);
 	debug("newMax = %d\n", newMax);
-	fprintf(fout, "%d %d %c\n", x+1, y+1, wall);
+	fprintf(fout, "%d %d %c\n", y+1, x+1, wall);
 	debug("%d %d %c\n", y+1, x+1, wall);
 
     fclose(fin);
