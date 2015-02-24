@@ -7,7 +7,7 @@ TASK: holstein
 #include <stdlib.h>
 #include <string.h>
 
-#define _DEBUG_
+//#define _DEBUG_
 #ifdef _DEBUG_
 	FILE *fdebug;
 	#define debug(str, ...) do{ fprintf(fdebug, str, __VA_ARGS__); printf(str, __VA_ARGS__); }while(0)
@@ -24,12 +24,15 @@ int vitaminCount = 0;
 int feedArray[25][15];
 int feedCount = 0;
 int queue[25];
-int qCount = 0;
+int qCount = 25;
+int queueTemp[25];
+int qtCount = 0;
 int vitaminRemain[25];
 
 int findFeed(int startIndex){
 	int i, j;
 	int remain = 0;
+	debug("findFeed - startIndex=%d\n", startIndex);
 	for(j = 0; j < vitaminCount; j++){
 		if(vitaminRemain[j] > 0){
 			remain = 1;
@@ -48,31 +51,33 @@ int findFeed(int startIndex){
 	int types = feedCount;
 	int temp;
 	for(i = startIndex; i < feedCount; i++){
-		queue[qCount] = i;
-		qCount++;
 		
 		for(j = 0; j < vitaminCount; j++){
 			vitaminRemain[j] = vitaminRemain[j] - feedArray[j][i];
 		}
+		queueTemp[qtCount] = i;
+		qtCount++;
 		temp = findFeed(i+1);
 		if(temp >= 0 && types > temp){
-			debug("%d(%d) ", i, temp);
 			types = temp;
 			min = i;
+			if(temp == 0 && qCount > qtCount){
+				memcpy(queue, queueTemp, sizeof(int)*qtCount);
+				qCount = qtCount;
+			}
+			debug("min=%d types=%d ", min, types);
 		}
 		for(j = 0; j < vitaminCount; j++){
 			vitaminRemain[j] = vitaminRemain[j] + feedArray[j][i];
 		}
-		qCount--;
+		qtCount--;
 	}
 	if(min == -1){
 		return -1;
 	}
 	else{
-		debug("%d ", min);
-		queue[qCount] = min;
-		qCount++;
-		return findFeed(min+1)+1;
+		debug("findFeed - startIndex=%d min %d, qCount %d\n", startIndex, min, qCount);
+		return types+1;
 	}
 }
 
@@ -110,13 +115,16 @@ int main(void){
 	debug("%s","\n");
 	
 	findFeed(0);
+	//print out
+	fprintf(fout, "%d", qCount);
+	debug("%d", qCount);
 	
 	for(i = 0; i < qCount; i++){
-		debug("%d ", queue[i]);
+		fprintf(fout, " %d", queue[i]+1);
+		debug(" %d", queue[i]+1);
 	}
-	//print out
-	//fprintf(fout, "%d\n", step+remain*2/3);
-	//debug("%d\n", step+remain*2/3);
+	fprintf(fout, "\n");
+	debug("%s","\n");
 	
 	fclose(fin);
     fclose(fout);
