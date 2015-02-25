@@ -15,6 +15,155 @@ TASK: subset
 	#define debug(str, ...) {;}
 #endif
 
+int number;
+int print[40] = {0};
+int count = 0;
+int printIndex = 0;
+
+#ifdef _DEBUG_
+void output(void){
+	int j;
+	debug("%s","output - ");
+	for(j = 1; j <= number; j++){
+		debug("%d ", print[j]);
+	}
+	debug("%s","\n");
+}
+void set(int start, int end, int value){
+	int j;
+	for(j = start; j <= end; j++){
+		print[j] = value;
+	}
+}
+#else
+	#define output() {;}
+	#define set(x, y, z) {;}
+#endif
+
+void findDiff(int start, int end, int diff){
+	debug("findDiff - %d->%d, %d\n", start, end, diff);
+	int pDiff = diff;
+	if(pDiff < 0){
+		pDiff = -1*pDiff;
+	}
+	
+	if( (start+end)*(end-start+1)/2 < pDiff ){
+		return;
+	}
+	else if(start == end){
+		if(start == diff){
+			count++;
+			print[start] = 1;
+			output();
+			return;
+		}
+		else{
+			return;
+		}
+	}
+	else{
+		print[end] = 1;
+		findDiff(start, end-1, diff+end);
+		print[end] = 0;
+		findDiff(start, end-1, diff-end);
+	}
+}
+
+
+void findSum(int start, int end, int sum){
+	debug("findSum - %d->%d, %d\n", start, end, sum);
+	if(sum == 0){
+		set(start, end, 0);
+		output();
+		count++;
+		return;
+	}
+	else if( (start+end)*(end-start+1)/2 == sum){
+		set(start, end, 1);
+		output();
+		count++;
+		return;
+	}
+	else if((start+end)*(end-start+1)/2 < sum){
+		return;
+	}
+	else if(start == end && start != sum){
+		return;
+	}
+	else{
+		if(sum >= end){
+			print[end] = 1;
+			findSum(start, end-1, sum-end);
+			print[end] = 0;
+			findSum(start, end-1, sum);
+			
+		}
+		else{
+			set(sum+1, end, 0);
+			findSum(start, sum, sum);
+		}
+		/*
+		print[end] = 0;
+		findSum(start, end-1, sum);
+		*/
+	}
+}
+
+
+void findSum2(int end, int sum){
+	debug("findSu2m - end=%d, sum=%d\n", end, sum);
+	int all = (1+end)*end/2;
+	if(sum == 0 || all == sum){
+		set(1, end, (sum != 0));
+		output();
+		count++;
+		return;
+	}
+	{
+		if(sum >= end){
+			print[end] = 1;
+			findSum2(end-1, sum-end);
+			
+			if( all-end >= sum ){
+				print[end] = 0;
+				findSum2(end-1, sum);
+			}
+			
+		}
+		else{
+			set(sum+1, end, 0);
+			findSum2(sum, sum);
+		}
+	}
+}
+
+
+void findSum3(int end, int sum){
+	debug("findSu2m - end=%d, sum=%d\n", end, sum);
+	int all = (1+end)*end/2;
+	
+	if(sum == 0 || all == sum){
+		set(1, end, (sum != 0));
+		output();
+		count++;
+		return;
+	}
+	if(sum >= end){
+		print[end] = 1;
+		findSum2(end-1, sum-end);
+		
+		if( all-end >= sum ){
+			print[end] = 0;
+			findSum3(end-1, sum);
+		}
+		
+	}
+	else{
+		set(sum+1, end, 0);
+		findSum3(sum, sum);
+	}
+}
+
 
 int main(void){
     FILE *fin  = fopen("subset.in", "r");
@@ -23,19 +172,41 @@ int main(void){
 	fdebug = fopen("debug.log", "w");
 #endif
 
-	int number;
-
+	
+	
 	fscanf(fin, "%d\n", &number);
 	debug("%d\n", number);
+
+	if(number != 1 && (number*(number+1)/2)%2 == 0 ){
+		print[number] = 1;
+		//findSum(1, number-1, number*(number+1)/2/2-number);
+		findSum3(number-1, number*(number+1)/2/2-number);
+	}
+/*
+#if 0	
+	if(number > 2){
+		print[number] = 1;
+		print[number-1] = 0;
+		findDiff(1, number-2, 1);
+		findDiff(1, number-2, -1);
+		findDiff(1, number-2, 2*number-1);
+		findDiff(1, number-2, 1-2*number);
+	}
+	else
+#endif
+	{
+		findDiff(1, number, 0);
+	}
+*/
+
+/*
+	unsigned long long i;
+	unsigned long long allOne = ((long long)1 << number) - 1;
 	
-	int i;
-	int allOne = (1 << number) - 1;
-	int count = 0;
 	for(i = 1; i <= allOne/2; i++){
-		int temp = i;
+		unsigned long long temp = i;
 		int sum[2] = {(number+1)*number/2, 0};
-		int print[40] = {0};
-		int printIndex = 0;
+
 		while(temp){
 			if(temp%2){
 				sum[1] += (printIndex+1);
@@ -54,6 +225,8 @@ int main(void){
 			debug("%s","\n");
 		}
 	}
+*/
+
 	//print out
 	fprintf(fout, "%d\n", count);
 	debug("%d\n", count);
