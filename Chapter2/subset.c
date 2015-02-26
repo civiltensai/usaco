@@ -19,6 +19,7 @@ int number;
 int print[40] = {0};
 int count = 0;
 int printIndex = 0;
+int counts[40][400];
 
 #ifdef _DEBUG_
 void output(void){
@@ -69,7 +70,6 @@ void findDiff(int start, int end, int diff){
 	}
 }
 
-
 void findSum(int start, int end, int sum){
 	debug("findSum - %d->%d, %d\n", start, end, sum);
 	if(sum == 0){
@@ -111,7 +111,7 @@ void findSum(int start, int end, int sum){
 
 
 void findSum2(int end, int sum){
-	debug("findSu2m - end=%d, sum=%d\n", end, sum);
+	debug("findSum2 - end=%d, sum=%d\n", end, sum);
 	int all = (1+end)*end/2;
 	if(sum == 0 || all == sum){
 		set(1, end, (sum != 0));
@@ -139,7 +139,7 @@ void findSum2(int end, int sum){
 
 
 void findSum3(int end, int sum){
-	debug("findSu2m - end=%d, sum=%d\n", end, sum);
+	debug("findSum3 - end=%d, sum=%d\n", end, sum);
 	int all = (1+end)*end/2;
 	
 	if(sum == 0 || all == sum){
@@ -150,7 +150,7 @@ void findSum3(int end, int sum){
 	}
 	if(sum >= end){
 		print[end] = 1;
-		findSum2(end-1, sum-end);
+		findSum3(end-1, sum-end);
 		
 		if( all-end >= sum ){
 			print[end] = 0;
@@ -165,6 +165,46 @@ void findSum3(int end, int sum){
 }
 
 
+int findSum4(int end, int sum){
+	debug("findSum4 - end=%d, sum=%d\n", end, sum);
+	int all = (1+end)*end/2;
+	int c = 0;
+	if(sum == 0 || all == sum){
+		set(1, end, (sum != 0));
+		output();
+		c = 1;
+		count += c;
+		return c;
+	}
+	if(sum >= end){
+		print[end] = 1;
+		if(counts[end-1][sum-end] != -1){
+			counts[end-1][sum-end] = findSum4(end-1, sum-end);
+		}
+		c += counts[end-1][sum-end];
+		
+		if( all-end >= sum ){
+			print[end] = 0;
+			if(counts[end-1][sum] == -1){
+				counts[end-1][sum] = findSum4(end-1, sum);
+			}
+			c += counts[end-1][sum];
+		}
+		count += c;
+		return c;
+	}
+	else{
+		set(sum+1, end, 0);
+		if(counts[sum][sum] == -1){
+			counts[sum][sum] = findSum4(sum, sum);
+		}
+		c += counts[sum][sum];
+		count += c;
+		return c;
+	}
+}
+
+
 int main(void){
     FILE *fin  = fopen("subset.in", "r");
     FILE *fout = fopen("subset.out", "w");
@@ -172,16 +212,24 @@ int main(void){
 	fdebug = fopen("debug.log", "w");
 #endif
 
-	
+	int i, j;
+	for(i = 0; i < 40; i++){
+		for(j = 0; j < 400; j++){
+			counts[i][j] = -1;
+		}
+	}
 	
 	fscanf(fin, "%d\n", &number);
 	debug("%d\n", number);
 
-	if(number != 1 && (number*(number+1)/2)%2 == 0 ){
+	if(number > 2 && (number*(number+1)/2)%2 == 0 ){
 		print[number] = 1;
 		//findSum(1, number-1, number*(number+1)/2/2-number);
 		findSum3(number-1, number*(number+1)/2/2-number);
+		debug("%d\n\n", count);
+		
 	}
+	
 /*
 #if 0	
 	if(number > 2){
